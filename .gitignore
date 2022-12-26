@@ -1,0 +1,2 @@
+./inventory_service/src/main/resources/application.properties
+./admin_dashboard/src/main/resources/application.properties
