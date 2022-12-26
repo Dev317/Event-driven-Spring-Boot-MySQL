@@ -1,12 +1,39 @@
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import './App.css'
-import { TextField, Button } from '@material-ui/core'
+import { 
+  TextField,
+  Button,
+  FormControl,
+  Table,
+  TableBody,
+  TableCell,
+  TableContainer,
+  TableHead,
+  TableRow,
+  Paper
+} from '@material-ui/core'
 import axios from 'axios'
 
 function App() {
-  const API_URL = "http://localhost:8080/admin/publish"
+  const ADMIN_API_URL = "http://localhost:8080/admin/publish"
+  const INVENTORY_API_URL = "http://localhost:8081/inventory/"
+
   const [inventoryName, setInventoryName] = useState("")
   const [inventoryQuantity, setInventoryQuantity] = useState("")
+  const [inventoryList, setInventoryList] = useState([])
+
+
+  useEffect(() => {
+    getInventory()
+  }, [])
+
+  const getInventory = () => {
+    axios
+      .get(INVENTORY_API_URL)
+      .then((res) => {
+        setInventoryList(res.data)
+      })
+  }
 
   const uploadInventory = (e) => {
     e.preventDefault();
@@ -20,36 +47,60 @@ function App() {
     }
 
     axios
-    .post(API_URL, body)
-    .then(res => {
-      console.log(res);
-      console.log(res.data);
-      setInventoryName("");
-      setInventoryQuantity("");
-
-    })
-    .catch(function (error) {
-      console.log(error);
-    });
-
+      .post(ADMIN_API_URL, body)
+      .then(res => {
+        setInventoryName("");
+        setInventoryQuantity("");
+        getInventory();
+      })
+      .catch(function (error) {
+        console.log(error);
+      });
   }
-
 
   return (
     <div className="App">
-      <h2>Inventory submit form</h2>
+      <div>
+        <h2>Inventory submit form</h2>
 
-      <div style={{ "marginBottom": "5px" }}>
-        <TextField id="inventory-name" label="Inventory Name" value={inventoryName} variant="outlined" onChange={(e) => { setInventoryName(e.target.value)}}/>
+        <FormControl>
+          <TextField margin="normal" id="inventory-name" label="Inventory Name" value={inventoryName} variant="outlined" onChange={(e) => { setInventoryName(e.target.value)}}/>
+          <TextField margin="normal" id="inventory-quantity" label="Inventory Quantity" value={inventoryQuantity} variant="outlined" onChange={(e) => { setInventoryQuantity(e.target.value)}}/>
+          <Button margin="normal" variant="contained" component="label" size="large" onClick={uploadInventory}>
+              Upload
+          </Button>
+        </FormControl>
       </div>
 
-      <div style={{ "marginBottom": "5px" }}>
-        <TextField id="inventory-quantity" label="Inventory Quantity" value={inventoryQuantity} variant="outlined" onChange={(e) => { setInventoryQuantity(e.target.value)}}/>
-      </div>
-        <Button variant="contained" component="label" size="large" onClick={uploadInventory}>
-          Upload
-        </Button>
+      <div>
+        <h2>Inventory updated table</h2>
 
+        <TableContainer component={Paper}>
+          <Table sx={{ minWidth: 450 }} aria-label="simple table">
+            <TableHead>
+              <TableRow>
+                <TableCell>ID</TableCell>
+                <TableCell align="right">Name</TableCell>
+                <TableCell align="right">Quantity (unit)</TableCell>
+              </TableRow>
+            </TableHead>
+
+            <TableBody>
+            {inventoryList.map((inventory) => (
+              <TableRow
+                key={inventory.id}
+                sx={{ '&:last-child td, &:last-child th': { border: 0 } }}
+              >
+                <TableCell component="th" scope="row">{inventory.id}</TableCell>
+                <TableCell align="right">{inventory.inventoryName}</TableCell>
+                <TableCell align="right">{inventory.quantity}</TableCell>
+              </TableRow>
+            ))}
+            </TableBody>
+          </Table>
+        </TableContainer>
+
+      </div>
     </div>
   )
 }
